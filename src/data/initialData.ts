@@ -1,0 +1,470 @@
+import type {
+  Branch,
+  FounderProfile,
+  Program,
+  SeoSetting,
+  SiteSettings,
+  Subject,
+  Teacher,
+} from '../types';
+
+export const ADMIN_EMAIL = 'tomoyoeducation.com@gmail.com';
+export const ADMIN_UID = 'Ra5KzowVQWPGlX8BH2fiAIwASQn1';
+export const CANONICAL_DOMAIN = 'https://tomoyoeducation.com';
+export const ADMIN_WHATSAPP_NUMBER = '+62 821-1977-0700';
+export const ADMIN_WHATSAPP_URL = 'https://wa.me/6282119770700';
+
+export const DEFAULT_SITE_SETTINGS: SiteSettings = {
+  id: 'main',
+  institutionName: 'TOMOYO PRIVAT & BIMBEL EDUCATION',
+  tagline: 'LEARN • GROW • SUCCEED',
+  foundedDate: '',
+  logoUrl: '/assets/aistudio/favicon_67ba3fe5.png',
+  faviconUrl: '/assets/aistudio/favicon_67ba3fe5.png',
+  headerImageUrl: '/assets/aistudio/header_bb02064d.jpg',
+  canonicalDomain: CANONICAL_DOMAIN,
+  shortDescription:
+    'Lembaga pendidikan privat dan bimbingan belajar terstruktur di Indramayu yang mendampingi peserta didik dari jenjang TK hingga SD kelas 6.',
+  aboutTitle: 'Mengenal TOMOYO PRIVAT & BIMBEL EDUCATION',
+  aboutContent:
+    'TOMOYO PRIVAT & BIMBEL EDUCATION hadir sebagai mitra belajar orang tua dan peserta didik di Kabupaten Indramayu. Melalui pendampingan belajar yang terarah, suasana kelas yang ramah, serta pengajar berpengalaman di bidangnya, kami membantu siswa membangun dasar literasi, numerasi, sains, hingga persiapan evaluasi akademik secara konsisten.',
+  vision:
+    'Menjadi lembaga bimbingan belajar dan pendidikan privat yang terpercaya dalam membentuk generasi cerdas, mandiri, berprestasi, dan berkarakter siap menghadapi tantangan masa depan.',
+  mission: [
+    'Menyelenggarakan pembelajaran privat dan kelompok kecil yang fokus pada pemahaman konsep.',
+    'Menumbuhkan rasa percaya diri serta kemandirian belajar pada setiap peserta didik.',
+    'Menyediakan pendampingan akademik yang terstruktur bersama orang tua/wali melalui informasi jadwal dan administrasi yang transparan.',
+  ],
+  brandMeaning:
+    'Tempat tumbuhnya generasi cerdas, mandiri, berprestasi, dan siap meraih masa depan.',
+  philosophy: [
+    {
+      letter: 'T',
+      word: 'Talenta',
+      description: 'Mengembangkan potensi setiap peserta didik.',
+    },
+    {
+      letter: 'O',
+      word: 'Optimis',
+      description: 'Memiliki keyakinan untuk meraih kesuksesan.',
+    },
+    {
+      letter: 'M',
+      word: 'Mandiri',
+      description: 'Membangun kemandirian dalam belajar.',
+    },
+    {
+      letter: 'O',
+      word: 'Outstanding',
+      description: 'Mendorong prestasi dan keunggulan.',
+    },
+    {
+      letter: 'Y',
+      word: 'Yakin',
+      description: 'Percaya terhadap kemampuan diri sendiri.',
+    },
+    {
+      letter: 'O',
+      word: 'Opportunity',
+      description: 'Menciptakan peluang untuk masa depan.',
+    },
+  ],
+  advantages: [
+    {
+      title: 'Kurikulum Bertahap Sesuai Jenjang',
+      description:
+        'Program disusun khusus mulai dari CALISTUNG (TK – Kelas 1), penguatan mapel inti (Kelas 2 – 5), hingga Persiapan TKA (Kelas 6).',
+    },
+    {
+      title: 'Tenaga Pengajar Berkompeten',
+      description:
+        'Didampingi langsung oleh pengajar berlatar belakang sarjana pendidikan dan sertifikasi profesi guru (S.Pd., S.Si., S.Pi., Gr.).',
+    },
+    {
+      title: 'Dua Lokasi Strategis di Indramayu',
+      description:
+        'Tersedia pusat belajar di Indramayu Kota dan cabang Kecamatan Terisi untuk memudahkan akses belajar siswa.',
+    },
+    {
+      title: 'Portal Orang Tua Terintegrasi',
+      description:
+        'Orang tua dapat memantau status pendaftaran beberapa anak sekaligus, jadwal belajar, serta rincian SPP secara rapi.',
+    },
+  ],
+  whatsappNumber: ADMIN_WHATSAPP_NUMBER,
+  whatsappUrl: ADMIN_WHATSAPP_URL,
+  email: ADMIN_EMAIL,
+  instagramUrl: '',
+  facebookUrl: '',
+  youtubeUrl: '',
+  heroHeadline:
+    'Pendampingan Belajar Terarah untuk Generasi Cerdas, Mandiri, dan Berprestasi',
+  heroSubheadline:
+    'Program Privat & Bimbel dari jenjang TK – Kelas 1 (CALISTUNG), Kelas 2 – 5, hingga Persiapan TKA Kelas 6 di Indramayu Kota dan Kecamatan Terisi.',
+  homeSections: [
+    { id: 'hero', label: 'Hero Section', enabled: true, order: 1 },
+    { id: 'stats', label: 'Statistik Lembaga', enabled: true, order: 2 },
+    { id: 'about', label: 'Tentang TOMOYO', enabled: true, order: 3 },
+    { id: 'philosophy', label: 'Filosofi TOMOYO', enabled: true, order: 4 },
+    { id: 'programs', label: 'Program Belajar', enabled: true, order: 5 },
+    { id: 'advantages', label: 'Keunggulan Lembaga', enabled: true, order: 6 },
+    { id: 'teachers', label: 'Daftar Pengajar', enabled: true, order: 7 },
+    { id: 'testimonials', label: 'Testimoni', enabled: true, order: 8 },
+    { id: 'gallery', label: 'Galeri Kegiatan', enabled: true, order: 9 },
+    { id: 'announcements', label: 'Pengumuman Terbaru', enabled: true, order: 10 },
+    { id: 'branches', label: 'Informasi Dua Cabang', enabled: true, order: 11 },
+    { id: 'cta', label: 'CTA Pendaftaran', enabled: true, order: 12 },
+  ],
+  statsOverride: {
+    useRealData: true,
+  },
+};
+
+export const DEFAULT_FOUNDER: FounderProfile = {
+  id: 'main',
+  name: 'JALALUDIN NUROHMAN, S.I.Kom., S.Pd., Gr.',
+  birthDate: '05 Maret 1992',
+  role: 'Founder & CEO',
+  photoUrl: '',
+  bio: '',
+  education: [],
+  experience: [],
+  vision:
+    'Menghadirkan pendampingan belajar yang memanusiakan peserta didik, menumbuhkan kemandirian, dan membuka peluang masa depan terbaik bagi anak-anak di Indramayu dan sekitarnya.',
+  message: '',
+};
+
+export const INITIAL_TEACHERS: Teacher[] = [
+  {
+    id: 'alfiyani',
+    name: 'ALFIYANI, S.Pd',
+    slug: 'alfiyani',
+    previousSlugs: [],
+    photoUrl: '',
+    bio: '',
+    education: 'S.Pd',
+    experience: '',
+    subjects: [],
+    isActive: true,
+    status: 'published',
+    order: 1,
+    seoTitle: 'ALFIYANI, S.Pd – Pengajar TOMOYO PRIVAT & BIMBEL EDUCATION',
+    seoDescription: 'Profil pengajar ALFIYANI, S.Pd di TOMOYO PRIVAT & BIMBEL EDUCATION Indramayu.',
+  },
+  {
+    id: 'yacob-batipi',
+    name: 'YACOB BATIPI S.Pd., Gr',
+    slug: 'yacob-batipi',
+    previousSlugs: [],
+    photoUrl: '',
+    bio: '',
+    education: 'S.Pd., Gr',
+    experience: '',
+    subjects: [],
+    isActive: true,
+    status: 'published',
+    order: 2,
+    seoTitle: 'YACOB BATIPI S.Pd., Gr – Pengajar TOMOYO PRIVAT & BIMBEL EDUCATION',
+    seoDescription: 'Profil pengajar YACOB BATIPI S.Pd., Gr di TOMOYO PRIVAT & BIMBEL EDUCATION Indramayu.',
+  },
+  {
+    id: 'fahmi-huawidi',
+    name: 'FAHMI HUAWIDI S.Pd., Gr',
+    slug: 'fahmi-huawidi',
+    previousSlugs: [],
+    photoUrl: '',
+    bio: '',
+    education: 'S.Pd., Gr',
+    experience: '',
+    subjects: [],
+    isActive: true,
+    status: 'published',
+    order: 3,
+    seoTitle: 'FAHMI HUAWIDI S.Pd., Gr – Pengajar TOMOYO PRIVAT & BIMBEL EDUCATION',
+    seoDescription: 'Profil pengajar FAHMI HUAWIDI S.Pd., Gr di TOMOYO PRIVAT & BIMBEL EDUCATION Indramayu.',
+  },
+  {
+    id: 'arti-iin-parlina',
+    name: 'ARTI IIN PARLINA, S.Pd., Gr',
+    slug: 'arti-iin-parlina',
+    previousSlugs: [],
+    photoUrl: '',
+    bio: '',
+    education: 'S.Pd., Gr',
+    experience: '',
+    subjects: [],
+    isActive: true,
+    status: 'published',
+    order: 4,
+    seoTitle: 'ARTI IIN PARLINA, S.Pd., Gr – Pengajar TOMOYO PRIVAT & BIMBEL EDUCATION',
+    seoDescription: 'Profil pengajar ARTI IIN PARLINA, S.Pd., Gr di TOMOYO PRIVAT & BIMBEL EDUCATION Indramayu.',
+  },
+  {
+    id: 'haya',
+    name: 'HAYA S.Pd',
+    slug: 'haya',
+    previousSlugs: [],
+    photoUrl: '',
+    bio: '',
+    education: 'S.Pd',
+    experience: '',
+    subjects: [],
+    isActive: true,
+    status: 'published',
+    order: 5,
+    seoTitle: 'HAYA S.Pd – Pengajar TOMOYO PRIVAT & BIMBEL EDUCATION',
+    seoDescription: 'Profil pengajar HAYA S.Pd di TOMOYO PRIVAT & BIMBEL EDUCATION Indramayu.',
+  },
+  {
+    id: 'restu',
+    name: 'RESTU SE., S.Pd., Gr',
+    slug: 'restu',
+    previousSlugs: [],
+    photoUrl: '',
+    bio: '',
+    education: 'SE., S.Pd., Gr',
+    experience: '',
+    subjects: [],
+    isActive: true,
+    status: 'published',
+    order: 6,
+    seoTitle: 'RESTU SE., S.Pd., Gr – Pengajar TOMOYO PRIVAT & BIMBEL EDUCATION',
+    seoDescription: 'Profil pengajar RESTU SE., S.Pd., Gr di TOMOYO PRIVAT & BIMBEL EDUCATION Indramayu.',
+  },
+  {
+    id: 'cipto-maraton',
+    name: 'CIPTO MARATON S.Pi., Gr',
+    slug: 'cipto-maraton',
+    previousSlugs: [],
+    photoUrl: '',
+    bio: '',
+    education: 'S.Pi., Gr',
+    experience: '',
+    subjects: [],
+    isActive: true,
+    status: 'published',
+    order: 7,
+    seoTitle: 'CIPTO MARATON S.Pi., Gr – Pengajar TOMOYO PRIVAT & BIMBEL EDUCATION',
+    seoDescription: 'Profil pengajar CIPTO MARATON S.Pi., Gr di TOMOYO PRIVAT & BIMBEL EDUCATION Indramayu.',
+  },
+  {
+    id: 'sofyan-andi',
+    name: 'SOFYAN ANDI S.Si., Gr',
+    slug: 'sofyan-andi',
+    previousSlugs: [],
+    photoUrl: '',
+    bio: '',
+    education: 'S.Si., Gr',
+    experience: '',
+    subjects: [],
+    isActive: true,
+    status: 'published',
+    order: 8,
+    seoTitle: 'SOFYAN ANDI S.Si., Gr – Pengajar TOMOYO PRIVAT & BIMBEL EDUCATION',
+    seoDescription: 'Profil pengajar SOFYAN ANDI S.Si., Gr di TOMOYO PRIVAT & BIMBEL EDUCATION Indramayu.',
+  },
+];
+
+export const INITIAL_BRANCHES: Branch[] = [
+  {
+    id: 'indramayu',
+    name: 'TOMOYO INDRAMAYU KOTA (PUSAT)',
+    slug: 'indramayu',
+    isCenter: true,
+    photoUrl: '',
+    description:
+      'Kantor pusat dan pusat kegiatan belajar utama TOMOYO PRIVAT & BIMBEL EDUCATION untuk wilayah Indramayu Kota dan sekitarnya.',
+    address: '',
+    whatsapp: ADMIN_WHATSAPP_NUMBER,
+    operatingHours: '',
+    mapsUrl: 'https://maps.app.goo.gl/Qr8GphiXc3FCNTp89',
+    isActive: true,
+    order: 1,
+  },
+  {
+    id: 'terisi',
+    name: 'CABANG TOMOYO KECAMATAN TERISI INDRAMAYU',
+    slug: 'terisi',
+    isCenter: false,
+    photoUrl: '',
+    description:
+      'Cabang pelayanan bimbingan belajar dan privat TOMOYO PRIVAT & BIMBEL EDUCATION di Kecamatan Terisi, Kabupaten Indramayu.',
+    address: '',
+    whatsapp: ADMIN_WHATSAPP_NUMBER,
+    operatingHours: '',
+    mapsUrl: 'https://maps.app.goo.gl/RvGUEXerHoN97EWAA?g_st=ac',
+    isActive: true,
+    order: 2,
+  },
+];
+
+export const INITIAL_PROGRAMS: Program[] = [
+  {
+    id: 'tk-kelas-1',
+    name: 'CALISTUNG (TK – Kelas 1)',
+    slug: 'tk-kelas-1',
+    levelLabel: 'TK – Kelas 1',
+    description:
+      'Program dasar membaca, menulis, dan berhitung (CALISTUNG) dengan pendekatan ramah anak untuk membangun kesiapan belajar.',
+    selectionMode: 'single',
+    status: 'published',
+    isActive: true,
+    order: 1,
+  },
+  {
+    id: 'kelas-2-5',
+    name: 'Bimbingan Belajar Kelas 2 – Kelas 5',
+    slug: 'kelas-2-5',
+    levelLabel: 'Kelas 2 – Kelas 5',
+    description:
+      'Pendampingan pemahaman konsep mata pelajaran inti sekolah dasar secara bertahap dan terarah.',
+    selectionMode: 'multiple',
+    status: 'published',
+    isActive: true,
+    order: 2,
+  },
+  {
+    id: 'kelas-6-tka',
+    name: 'Persiapan TKA (Kelas 6)',
+    slug: 'kelas-6-tka',
+    levelLabel: 'Kelas 6',
+    description:
+      'Program intensif Kelas 6 untuk pematangan materi dan latihan evaluasi persiapan TKA.',
+    selectionMode: 'multiple',
+    status: 'published',
+    isActive: true,
+    order: 3,
+  },
+];
+
+export const INITIAL_SUBJECTS: Subject[] = [
+  {
+    id: 'sub-calistung',
+    programId: 'tk-kelas-1',
+    name: 'CALISTUNG',
+    levelLabel: 'TK – Kelas 1',
+    description: 'Membaca, Menulis, dan Berhitung dasar.',
+    isActive: true,
+    order: 1,
+  },
+  {
+    id: 'sub-k25-bindo',
+    programId: 'kelas-2-5',
+    name: 'Bahasa Indonesia',
+    levelLabel: 'Kelas 2 – Kelas 5',
+    description: 'Literasi, pemahaman bacaan, dan tata bahasa.',
+    isActive: true,
+    order: 1,
+  },
+  {
+    id: 'sub-k25-bing',
+    programId: 'kelas-2-5',
+    name: 'Bahasa Inggris',
+    levelLabel: 'Kelas 2 – Kelas 5',
+    description: 'Kosakata dasar, percakapan, dan pemahaman teks.',
+    isActive: true,
+    order: 2,
+  },
+  {
+    id: 'sub-k25-mtk',
+    programId: 'kelas-2-5',
+    name: 'Matematika (MTK)',
+    levelLabel: 'Kelas 2 – Kelas 5',
+    description: 'Operasi hitung, pemecahan masalah, dan penalaran numerik.',
+    isActive: true,
+    order: 3,
+  },
+  {
+    id: 'sub-k25-ipas',
+    programId: 'kelas-2-5',
+    name: 'IPAS',
+    levelLabel: 'Kelas 2 – Kelas 5',
+    description: 'Ilmu Pengetahuan Alam dan Sosial terpadu.',
+    isActive: true,
+    order: 4,
+  },
+  {
+    id: 'sub-k6-mtk',
+    programId: 'kelas-6-tka',
+    name: 'Matematika',
+    levelLabel: 'Kelas 6 (Persiapan TKA)',
+    description: 'Pemantapan konsep dan soal latihan TKA Matematika.',
+    isActive: true,
+    order: 1,
+  },
+  {
+    id: 'sub-k6-bindo',
+    programId: 'kelas-6-tka',
+    name: 'Bahasa Indonesia',
+    levelLabel: 'Kelas 6 (Persiapan TKA)',
+    description: 'Pemantapan literasi dan soal latihan TKA Bahasa Indonesia.',
+    isActive: true,
+    order: 2,
+  },
+  {
+    id: 'sub-k6-ipas',
+    programId: 'kelas-6-tka',
+    name: 'IPAS',
+    levelLabel: 'Kelas 6 (Persiapan TKA)',
+    description: 'Pemantapan sains, sosial, dan soal latihan TKA IPAS.',
+    isActive: true,
+    order: 3,
+  },
+];
+
+export const DEFAULT_SEO_SETTINGS: SeoSetting[] = [
+  {
+    id: 'default',
+    pageKey: 'default',
+    title: 'TOMOYO PRIVAT & BIMBEL EDUCATION – Bimbingan Belajar Indramayu',
+    description:
+      'Tempat tumbuhnya generasi cerdas, mandiri, berprestasi, dan siap meraih masa depan. Program CALISTUNG, SD Kelas 2–5, dan Persiapan TKA Kelas 6.',
+    ogImageUrl: `${CANONICAL_DOMAIN}/assets/aistudio/header_bb02064d.jpg`,
+    noIndex: false,
+  },
+  {
+    id: 'tentang',
+    pageKey: 'tentang',
+    title: 'Tentang Kami – TOMOYO PRIVAT & BIMBEL EDUCATION',
+    description:
+      'Mengenal visi, misi, dan filosofi TOMOYO PRIVAT & BIMBEL EDUCATION di Indramayu.',
+    ogImageUrl: `${CANONICAL_DOMAIN}/assets/aistudio/header_bb02064d.jpg`,
+    noIndex: false,
+  },
+  {
+    id: 'program',
+    pageKey: 'program',
+    title: 'Program Belajar – TOMOYO PRIVAT & BIMBEL EDUCATION',
+    description:
+      'Daftar program belajar CALISTUNG (TK–Kelas 1), Kelas 2–5, dan Persiapan TKA Kelas 6 di TOMOYO EDUCATION.',
+    ogImageUrl: `${CANONICAL_DOMAIN}/assets/aistudio/header_bb02064d.jpg`,
+    noIndex: false,
+  },
+  {
+    id: 'pengajar',
+    pageKey: 'pengajar',
+    title: 'Daftar Pengajar – TOMOYO PRIVAT & BIMBEL EDUCATION',
+    description:
+      'Tim pengajar profesional dan berdedikasi di TOMOYO PRIVAT & BIMBEL EDUCATION.',
+    ogImageUrl: `${CANONICAL_DOMAIN}/assets/aistudio/header_bb02064d.jpg`,
+    noIndex: false,
+  },
+  {
+    id: 'founder',
+    pageKey: 'founder',
+    title: 'Profil Founder – JALALUDIN NUROHMAN, S.I.Kom., S.Pd., Gr.',
+    description:
+      'Profil JALALUDIN NUROHMAN, S.I.Kom., S.Pd., Gr., Founder & CEO TOMOYO PRIVAT & BIMBEL EDUCATION.',
+    ogImageUrl: `${CANONICAL_DOMAIN}/assets/aistudio/header_bb02064d.jpg`,
+    noIndex: false,
+  },
+  {
+    id: 'cabang',
+    pageKey: 'cabang',
+    title: 'Lokasi Cabang – TOMOYO PRIVAT & BIMBEL EDUCATION',
+    description:
+      'Lokasi TOMOYO Indramayu Kota (Pusat) dan Cabang Kecamatan Terisi Indramayu.',
+    ogImageUrl: `${CANONICAL_DOMAIN}/assets/aistudio/header_bb02064d.jpg`,
+    noIndex: false,
+  },
+];

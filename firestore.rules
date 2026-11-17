@@ -1,0 +1,625 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Connection validation probe (non-PII empty doc check)
+    match /test/{docId} {
+      allow get: if docId == 'connection';
+    }
+
+    // --- Primitive Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser()
+        && request.auth.uid == 'Ra5KzowVQWPGlX8BH2fiAIwASQn1'
+        && request.auth.token.email == 'tomoyoeducation.com@gmail.com';
+    }
+
+    function isOptString(data, field, maxLen) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isStringList(val, maxItems) {
+      return val is list && val.size() <= maxItems && (val.size() == 0 || val[0] is string);
+    }
+
+    // --- Entity Validation Blueprints ---
+
+    function isValidSettings(data) {
+      return data.keys().hasAll(['institutionName', 'canonicalDomain', 'whatsappNumber'])
+        && data.keys().hasOnly([
+          'institutionName', 'tagline', 'foundedDate', 'logoUrl', 'faviconUrl',
+          'headerImageUrl', 'canonicalDomain', 'shortDescription', 'aboutTitle',
+          'aboutContent', 'vision', 'mission', 'brandMeaning', 'philosophy',
+          'advantages', 'whatsappNumber', 'whatsappUrl', 'email', 'instagramUrl',
+          'facebookUrl', 'youtubeUrl', 'heroHeadline', 'heroSubheadline',
+          'homeSections', 'statsOverride', 'updatedAt'
+        ])
+        && data.institutionName is string && data.institutionName.size() >= 2 && data.institutionName.size() <= 120
+        && data.canonicalDomain is string && data.canonicalDomain.size() >= 5 && data.canonicalDomain.size() <= 200
+        && data.whatsappNumber is string && data.whatsappNumber.size() >= 5 && data.whatsappNumber.size() <= 40
+        && isOptString(data, 'tagline', 160)
+        && isOptString(data, 'foundedDate', 80)
+        && isOptString(data, 'logoUrl', 500)
+        && isOptString(data, 'faviconUrl', 500)
+        && isOptString(data, 'headerImageUrl', 500)
+        && isOptString(data, 'shortDescription', 600)
+        && isOptString(data, 'aboutTitle', 160)
+        && isOptString(data, 'aboutContent', 5000)
+        && isOptString(data, 'vision', 1500)
+        && isOptString(data, 'brandMeaning', 500)
+        && isOptString(data, 'whatsappUrl', 200)
+        && isOptString(data, 'email', 160)
+        && isOptString(data, 'instagramUrl', 300)
+        && isOptString(data, 'facebookUrl', 300)
+        && isOptString(data, 'youtubeUrl', 300)
+        && isOptString(data, 'heroHeadline', 200)
+        && isOptString(data, 'heroSubheadline', 500)
+        && isOptString(data, 'updatedAt', 60)
+        && (!('mission' in data) || isStringList(data.mission, 20))
+        && (!('philosophy' in data) || (data.philosophy is list && data.philosophy.size() <= 10))
+        && (!('advantages' in data) || (data.advantages is list && data.advantages.size() <= 12))
+        && (!('homeSections' in data) || (data.homeSections is list && data.homeSections.size() <= 20))
+        && (!('statsOverride' in data) || data.statsOverride is map);
+    }
+
+    function isValidSeoSetting(data) {
+      return data.keys().hasAll(['pageKey', 'title', 'description'])
+        && data.keys().hasOnly(['pageKey', 'title', 'description', 'ogImageUrl', 'noIndex', 'updatedAt'])
+        && data.pageKey is string && data.pageKey.size() >= 1 && data.pageKey.size() <= 80
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && data.description is string && data.description.size() <= 320
+        && isOptString(data, 'ogImageUrl', 500)
+        && (!('noIndex' in data) || data.noIndex is bool)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidSitePage(data) {
+      return data.keys().hasAll(['slug', 'title', 'status'])
+        && data.keys().hasOnly(['slug', 'title', 'subtitle', 'body', 'status', 'updatedAt'])
+        && isValidId(data.slug)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && isOptString(data, 'subtitle', 400)
+        && isOptString(data, 'body', 15000)
+        && data.status in ['draft', 'published']
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidFounder(data) {
+      return data.keys().hasAll(['name', 'birthDate', 'role'])
+        && data.keys().hasOnly([
+          'name', 'birthDate', 'role', 'photoUrl', 'bio',
+          'education', 'experience', 'vision', 'message', 'updatedAt'
+        ])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+        && data.birthDate is string && data.birthDate.size() >= 2 && data.birthDate.size() <= 60
+        && data.role is string && data.role.size() >= 2 && data.role.size() <= 120
+        && isOptString(data, 'photoUrl', 500)
+        && isOptString(data, 'bio', 8000)
+        && (!('education' in data) || isStringList(data.education, 20))
+        && (!('experience' in data) || isStringList(data.experience, 20))
+        && isOptString(data, 'vision', 2000)
+        && isOptString(data, 'message', 2000)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidTeacher(data) {
+      return data.keys().hasAll(['name', 'slug', 'isActive', 'status', 'order'])
+        && data.keys().hasOnly([
+          'name', 'slug', 'previousSlugs', 'photoUrl', 'bio', 'education',
+          'experience', 'subjects', 'isActive', 'status', 'order',
+          'seoTitle', 'seoDescription', 'createdAt', 'updatedAt'
+        ])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+        && isValidId(data.slug)
+        && (!('previousSlugs' in data) || isStringList(data.previousSlugs, 20))
+        && isOptString(data, 'photoUrl', 500)
+        && isOptString(data, 'bio', 5000)
+        && isOptString(data, 'education', 1000)
+        && isOptString(data, 'experience', 2000)
+        && (!('subjects' in data) || isStringList(data.subjects, 20))
+        && data.isActive is bool
+        && data.status in ['draft', 'published']
+        && data.order is number
+        && isOptString(data, 'seoTitle', 160)
+        && isOptString(data, 'seoDescription', 320)
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidBranch(data) {
+      return data.keys().hasAll(['name', 'slug', 'mapsUrl', 'isActive', 'order'])
+        && data.keys().hasOnly([
+          'name', 'slug', 'isCenter', 'photoUrl', 'description',
+          'address', 'whatsapp', 'operatingHours', 'mapsUrl',
+          'isActive', 'order', 'createdAt', 'updatedAt'
+        ])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+        && isValidId(data.slug)
+        && (!('isCenter' in data) || data.isCenter is bool)
+        && isOptString(data, 'photoUrl', 500)
+        && isOptString(data, 'description', 3000)
+        && isOptString(data, 'address', 500)
+        && isOptString(data, 'whatsapp', 40)
+        && isOptString(data, 'operatingHours', 300)
+        && data.mapsUrl is string && data.mapsUrl.size() >= 5 && data.mapsUrl.size() <= 500
+        && data.isActive is bool
+        && data.order is number
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidProgram(data) {
+      return data.keys().hasAll(['name', 'slug', 'levelLabel', 'selectionMode', 'status', 'isActive', 'order'])
+        && data.keys().hasOnly([
+          'name', 'slug', 'levelLabel', 'description', 'selectionMode',
+          'status', 'isActive', 'order', 'createdAt', 'updatedAt'
+        ])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+        && isValidId(data.slug)
+        && data.levelLabel is string && data.levelLabel.size() >= 1 && data.levelLabel.size() <= 120
+        && isOptString(data, 'description', 3000)
+        && data.selectionMode in ['single', 'multiple']
+        && data.status in ['draft', 'published']
+        && data.isActive is bool
+        && data.order is number
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidSubject(data) {
+      return data.keys().hasAll(['programId', 'name', 'isActive', 'order'])
+        && data.keys().hasOnly([
+          'programId', 'name', 'levelLabel', 'description',
+          'isActive', 'order', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.programId)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 140
+        && isOptString(data, 'levelLabel', 120)
+        && isOptString(data, 'description', 1000)
+        && data.isActive is bool
+        && data.order is number
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidGallery(data) {
+      return data.keys().hasAll(['title', 'imageUrl', 'status', 'order'])
+        && data.keys().hasOnly([
+          'title', 'description', 'imageUrl', 'activityDate',
+          'category', 'order', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && isOptString(data, 'description', 1000)
+        && data.imageUrl is string && data.imageUrl.size() >= 5 && data.imageUrl.size() <= 500
+        && isOptString(data, 'activityDate', 40)
+        && isOptString(data, 'category', 80)
+        && data.order is number
+        && data.status in ['draft', 'published']
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidTestimonial(data) {
+      return data.keys().hasAll(['authorName', 'content', 'isVisible', 'order'])
+        && data.keys().hasOnly([
+          'authorName', 'authorRole', 'photoUrl', 'content',
+          'isVisible', 'order', 'createdAt', 'updatedAt'
+        ])
+        && data.authorName is string && data.authorName.size() >= 2 && data.authorName.size() <= 120
+        && isOptString(data, 'authorRole', 120)
+        && isOptString(data, 'photoUrl', 500)
+        && data.content is string && data.content.size() >= 5 && data.content.size() <= 1500
+        && data.isVisible is bool
+        && data.order is number
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidAnnouncement(data) {
+      return data.keys().hasAll(['title', 'slug', 'content', 'status'])
+        && data.keys().hasOnly([
+          'title', 'slug', 'previousSlugs', 'excerpt', 'content', 'imageUrl',
+          'publishedAt', 'status', 'seoTitle', 'seoDescription', 'createdAt', 'updatedAt'
+        ])
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 200
+        && isValidId(data.slug)
+        && (!('previousSlugs' in data) || isStringList(data.previousSlugs, 20))
+        && isOptString(data, 'excerpt', 400)
+        && data.content is string && data.content.size() >= 2 && data.content.size() <= 15000
+        && isOptString(data, 'imageUrl', 500)
+        && isOptString(data, 'publishedAt', 40)
+        && data.status in ['draft', 'published']
+        && isOptString(data, 'seoTitle', 160)
+        && isOptString(data, 'seoDescription', 320)
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidSchedule(data) {
+      return data.keys().hasAll(['programId', 'className', 'dayOfWeek', 'startTime', 'endTime', 'branchId', 'isActive'])
+        && data.keys().hasOnly([
+          'programId', 'programName', 'className', 'subjectName',
+          'teacherId', 'teacherName', 'dayOfWeek', 'startTime', 'endTime',
+          'branchId', 'branchName', 'isActive', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.programId)
+        && isOptString(data, 'programName', 160)
+        && data.className is string && data.className.size() >= 1 && data.className.size() <= 120
+        && isOptString(data, 'subjectName', 140)
+        && isOptString(data, 'teacherId', 128)
+        && isOptString(data, 'teacherName', 160)
+        && data.dayOfWeek is string && data.dayOfWeek.size() >= 3 && data.dayOfWeek.size() <= 40
+        && data.startTime is string && data.startTime.size() >= 3 && data.startTime.size() <= 20
+        && data.endTime is string && data.endTime.size() >= 3 && data.endTime.size() <= 20
+        && isValidId(data.branchId)
+        && isOptString(data, 'branchName', 160)
+        && data.isActive is bool
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidParent(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'whatsapp', 'address'])
+        && data.keys().hasOnly(['uid', 'name', 'email', 'whatsapp', 'address', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.whatsapp is string && data.whatsapp.size() >= 6 && data.whatsapp.size() <= 40
+        && data.address is string && data.address.size() >= 3 && data.address.size() <= 500
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidStudent(data) {
+      return data.keys().hasAll([
+          'parentUid', 'fullName', 'birthDate', 'gender', 'gradeLevel',
+          'programId', 'programNameSnapshot', 'subjectIds', 'subjectNamesSnapshot',
+          'branchId', 'branchNameSnapshot', 'address', 'registrationStatus', 'isActive', 'monthlyFee'
+        ])
+        && data.keys().hasOnly([
+          'parentUid', 'parentName', 'fullName', 'photoUrl', 'photoConsent',
+          'birthDate', 'gender', 'gradeLevel', 'programId', 'programNameSnapshot',
+          'subjectIds', 'subjectNamesSnapshot', 'branchId', 'branchNameSnapshot',
+          'address', 'notes', 'registrationStatus', 'isActive', 'monthlyFee',
+          'billingAnchorDay', 'startDate', 'adminNotes', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.parentUid)
+        && isOptString(data, 'parentName', 160)
+        && data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 160
+        && isOptString(data, 'photoUrl', 500)
+        && (!('photoConsent' in data) || data.photoConsent is bool)
+        && data.birthDate is string && data.birthDate.size() >= 4 && data.birthDate.size() <= 20
+        && data.gender in ['Laki-laki', 'Perempuan']
+        && data.gradeLevel is string && data.gradeLevel.size() >= 1 && data.gradeLevel.size() <= 80
+        && isValidId(data.programId)
+        && data.programNameSnapshot is string && data.programNameSnapshot.size() >= 1 && data.programNameSnapshot.size() <= 160
+        && isStringList(data.subjectIds, 20) && data.subjectIds.size() >= 1
+        && isStringList(data.subjectNamesSnapshot, 20) && data.subjectNamesSnapshot.size() >= 1
+        && isValidId(data.branchId)
+        && data.branchNameSnapshot is string && data.branchNameSnapshot.size() >= 1 && data.branchNameSnapshot.size() <= 160
+        && data.address is string && data.address.size() >= 3 && data.address.size() <= 500
+        && isOptString(data, 'notes', 1000)
+        && data.registrationStatus in ['pending', 'approved', 'rejected']
+        && data.isActive is bool
+        && data.monthlyFee is number && data.monthlyFee >= 0 && data.monthlyFee <= 100000000
+        && (!('billingAnchorDay' in data) || (data.billingAnchorDay is number && data.billingAnchorDay >= 1 && data.billingAnchorDay <= 31))
+        && isOptString(data, 'startDate', 20)
+        && isOptString(data, 'adminNotes', 1000)
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidRegistration(data) {
+      return data.keys().hasAll([
+          'parentUid', 'studentId', 'parentNameSnapshot', 'studentNameSnapshot',
+          'gradeLevel', 'programId', 'programNameSnapshot', 'subjectNamesSnapshot',
+          'branchId', 'branchNameSnapshot', 'status'
+        ])
+        && data.keys().hasOnly([
+          'parentUid', 'studentId', 'parentNameSnapshot', 'parentEmailSnapshot',
+          'parentWhatsappSnapshot', 'studentNameSnapshot', 'gradeLevel',
+          'programId', 'programNameSnapshot', 'subjectNamesSnapshot',
+          'branchId', 'branchNameSnapshot', 'notes', 'status',
+          'adminNotes', 'reviewedAt', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.parentUid)
+        && isValidId(data.studentId)
+        && data.parentNameSnapshot is string && data.parentNameSnapshot.size() >= 2 && data.parentNameSnapshot.size() <= 160
+        && isOptString(data, 'parentEmailSnapshot', 200)
+        && isOptString(data, 'parentWhatsappSnapshot', 40)
+        && data.studentNameSnapshot is string && data.studentNameSnapshot.size() >= 2 && data.studentNameSnapshot.size() <= 160
+        && data.gradeLevel is string && data.gradeLevel.size() >= 1 && data.gradeLevel.size() <= 80
+        && isValidId(data.programId)
+        && data.programNameSnapshot is string && data.programNameSnapshot.size() >= 1 && data.programNameSnapshot.size() <= 160
+        && isStringList(data.subjectNamesSnapshot, 20) && data.subjectNamesSnapshot.size() >= 1
+        && isValidId(data.branchId)
+        && data.branchNameSnapshot is string && data.branchNameSnapshot.size() >= 1 && data.branchNameSnapshot.size() <= 160
+        && isOptString(data, 'notes', 1000)
+        && data.status in ['pending', 'approved', 'rejected']
+        && isOptString(data, 'adminNotes', 1000)
+        && isOptString(data, 'reviewedAt', 40)
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidInvoice(data) {
+      return data.keys().hasAll([
+          'studentId', 'parentUid', 'studentNameSnapshot', 'parentNameSnapshot',
+          'programNameSnapshot', 'branchId', 'branchNameSnapshot',
+          'periodYear', 'periodMonth', 'periodLabel', 'amount', 'anchorDay', 'dueDate', 'status'
+        ])
+        && data.keys().hasOnly([
+          'studentId', 'parentUid', 'studentNameSnapshot', 'parentNameSnapshot',
+          'programNameSnapshot', 'branchId', 'branchNameSnapshot',
+          'periodYear', 'periodMonth', 'periodLabel', 'amount', 'anchorDay',
+          'dueDate', 'status', 'paidAt', 'paymentMethod', 'paymentId',
+          'notes', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.studentId)
+        && isValidId(data.parentUid)
+        && data.studentNameSnapshot is string && data.studentNameSnapshot.size() >= 1 && data.studentNameSnapshot.size() <= 160
+        && data.parentNameSnapshot is string && data.parentNameSnapshot.size() >= 1 && data.parentNameSnapshot.size() <= 160
+        && data.programNameSnapshot is string && data.programNameSnapshot.size() >= 1 && data.programNameSnapshot.size() <= 160
+        && isValidId(data.branchId)
+        && data.branchNameSnapshot is string && data.branchNameSnapshot.size() >= 1 && data.branchNameSnapshot.size() <= 160
+        && data.periodYear is number && data.periodYear >= 2020 && data.periodYear <= 2100
+        && data.periodMonth is number && data.periodMonth >= 1 && data.periodMonth <= 12
+        && data.periodLabel is string && data.periodLabel.size() >= 3 && data.periodLabel.size() <= 60
+        && data.amount is number && data.amount >= 0 && data.amount <= 100000000
+        && data.anchorDay is number && data.anchorDay >= 1 && data.anchorDay <= 31
+        && data.dueDate is string && data.dueDate.size() >= 8 && data.dueDate.size() <= 20
+        && data.status in ['unpaid', 'paid']
+        && isOptString(data, 'paidAt', 40)
+        && (!('paymentMethod' in data) || data.paymentMethod in ['Tunai', 'Transfer', ''])
+        && isOptString(data, 'paymentId', 128)
+        && isOptString(data, 'notes', 500)
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidPayment(data) {
+      return data.keys().hasAll([
+          'invoiceId', 'studentId', 'parentUid', 'receiptNumber',
+          'studentNameSnapshot', 'parentNameSnapshot', 'programNameSnapshot',
+          'branchId', 'branchNameSnapshot', 'periodLabel', 'amountSnapshot',
+          'paymentDate', 'paymentMethod', 'recordedByUid'
+        ])
+        && data.keys().hasOnly([
+          'invoiceId', 'studentId', 'parentUid', 'receiptNumber',
+          'studentNameSnapshot', 'parentNameSnapshot', 'programNameSnapshot',
+          'branchId', 'branchNameSnapshot', 'periodLabel', 'amountSnapshot',
+          'paymentDate', 'paymentMethod', 'notes', 'recordedByUid',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.invoiceId)
+        && isValidId(data.studentId)
+        && isValidId(data.parentUid)
+        && data.receiptNumber is string && data.receiptNumber.size() >= 3 && data.receiptNumber.size() <= 80
+        && data.studentNameSnapshot is string && data.studentNameSnapshot.size() >= 1 && data.studentNameSnapshot.size() <= 160
+        && data.parentNameSnapshot is string && data.parentNameSnapshot.size() >= 1 && data.parentNameSnapshot.size() <= 160
+        && data.programNameSnapshot is string && data.programNameSnapshot.size() >= 1 && data.programNameSnapshot.size() <= 160
+        && isValidId(data.branchId)
+        && data.branchNameSnapshot is string && data.branchNameSnapshot.size() >= 1 && data.branchNameSnapshot.size() <= 160
+        && data.periodLabel is string && data.periodLabel.size() >= 3 && data.periodLabel.size() <= 60
+        && data.amountSnapshot is number && data.amountSnapshot >= 0 && data.amountSnapshot <= 100000000
+        && data.paymentDate is string && data.paymentDate.size() >= 8 && data.paymentDate.size() <= 20
+        && data.paymentMethod in ['Tunai', 'Transfer']
+        && isOptString(data, 'notes', 500)
+        && data.recordedByUid == 'Ra5KzowVQWPGlX8BH2fiAIwASQn1'
+        && isOptString(data, 'createdAt', 60)
+        && isOptString(data, 'updatedAt', 60);
+    }
+
+    function isValidContactMessage(data) {
+      return data.keys().hasAll(['name', 'whatsapp', 'message', 'status'])
+        && data.keys().hasOnly(['name', 'whatsapp', 'email', 'branchName', 'message', 'status', 'createdAt'])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+        && data.whatsapp is string && data.whatsapp.size() >= 6 && data.whatsapp.size() <= 40
+        && isOptString(data, 'email', 200)
+        && isOptString(data, 'branchName', 160)
+        && data.message is string && data.message.size() >= 5 && data.message.size() <= 2000
+        && data.status in ['new', 'read', 'replied']
+        && isOptString(data, 'createdAt', 60);
+    }
+
+    // --- Collection Rules ---
+
+    match /settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+      allow create, update: if isAdmin() && isValidId(settingId) && isValidSettings(incoming());
+      allow delete: if isAdmin() && isValidId(settingId);
+    }
+
+    match /seoSettings/{seoId} {
+      allow get: if isValidId(seoId);
+      allow list: if true;
+      allow create, update: if isAdmin() && isValidId(seoId) && isValidSeoSetting(incoming());
+      allow delete: if isAdmin() && isValidId(seoId);
+    }
+
+    match /sitePages/{pageId} {
+      allow get: if isValidId(pageId) && (isAdmin() || existing().status == 'published');
+      allow list: if isAdmin() || resource.data.status == 'published';
+      allow create, update: if isAdmin() && isValidId(pageId) && isValidSitePage(incoming());
+      allow delete: if isAdmin() && isValidId(pageId);
+    }
+
+    match /founder/{founderId} {
+      allow get: if isValidId(founderId);
+      allow list: if true;
+      allow create, update: if isAdmin() && isValidId(founderId) && isValidFounder(incoming());
+      allow delete: if isAdmin() && isValidId(founderId);
+    }
+
+    match /teachers/{teacherId} {
+      allow get: if isValidId(teacherId) && (isAdmin() || existing().status == 'published');
+      allow list: if isAdmin() || resource.data.status == 'published';
+      allow create, update: if isAdmin() && isValidId(teacherId) && isValidTeacher(incoming());
+      allow delete: if isAdmin() && isValidId(teacherId);
+    }
+
+    match /branches/{branchId} {
+      allow get: if isValidId(branchId) && (isAdmin() || existing().isActive == true);
+      allow list: if isAdmin() || resource.data.isActive == true;
+      allow create, update: if isAdmin() && isValidId(branchId) && isValidBranch(incoming());
+      allow delete: if isAdmin() && isValidId(branchId);
+    }
+
+    match /programs/{programId} {
+      allow get: if isValidId(programId) && (isAdmin() || existing().status == 'published');
+      allow list: if isAdmin() || resource.data.status == 'published';
+      allow create, update: if isAdmin() && isValidId(programId) && isValidProgram(incoming());
+      allow delete: if isAdmin() && isValidId(programId);
+    }
+
+    match /subjects/{subjectId} {
+      allow get: if isValidId(subjectId) && (isAdmin() || existing().isActive == true);
+      allow list: if isAdmin() || resource.data.isActive == true;
+      allow create, update: if isAdmin() && isValidId(subjectId) && isValidSubject(incoming());
+      allow delete: if isAdmin() && isValidId(subjectId);
+    }
+
+    match /galleries/{galleryId} {
+      allow get: if isValidId(galleryId) && (isAdmin() || existing().status == 'published');
+      allow list: if isAdmin() || resource.data.status == 'published';
+      allow create, update: if isAdmin() && isValidId(galleryId) && isValidGallery(incoming());
+      allow delete: if isAdmin() && isValidId(galleryId);
+    }
+
+    match /testimonials/{testimonialId} {
+      allow get: if isValidId(testimonialId) && (isAdmin() || existing().isVisible == true);
+      allow list: if isAdmin() || resource.data.isVisible == true;
+      allow create, update: if isAdmin() && isValidId(testimonialId) && isValidTestimonial(incoming());
+      allow delete: if isAdmin() && isValidId(testimonialId);
+    }
+
+    match /announcements/{announcementId} {
+      allow get: if isValidId(announcementId) && (isAdmin() || existing().status == 'published');
+      allow list: if isAdmin() || resource.data.status == 'published';
+      allow create, update: if isAdmin() && isValidId(announcementId) && isValidAnnouncement(incoming());
+      allow delete: if isAdmin() && isValidId(announcementId);
+    }
+
+    match /schedules/{scheduleId} {
+      allow get: if isValidId(scheduleId) && (isAdmin() || existing().isActive == true);
+      allow list: if isAdmin() || resource.data.isActive == true;
+      allow create, update: if isAdmin() && isValidId(scheduleId) && isValidSchedule(incoming());
+      allow delete: if isAdmin() && isValidId(scheduleId);
+    }
+
+    match /parents/{parentId} {
+      allow get: if isValidId(parentId) && (isAdmin() || (isSignedIn() && request.auth.uid == parentId));
+      allow list: if isAdmin();
+      allow create: if isValidId(parentId) && isValidParent(incoming()) && (
+        isAdmin() || (isVerifiedUser() && parentId == request.auth.uid && incoming().uid == request.auth.uid)
+      );
+      allow update: if isValidId(parentId) && isValidParent(incoming()) && (
+        isAdmin() || (
+          isVerifiedUser()
+          && parentId == request.auth.uid
+          && incoming().uid == existing().uid
+          && incoming().email == existing().email
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'whatsapp', 'address', 'updatedAt'])
+        )
+      );
+      allow delete: if isAdmin() && isValidId(parentId);
+    }
+
+    match /students/{studentId} {
+      allow get: if isValidId(studentId) && (isAdmin() || (isSignedIn() && existing().parentUid == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.parentUid == request.auth.uid);
+      allow create: if isValidId(studentId) && isValidStudent(incoming()) && (
+        isAdmin() || (
+          isVerifiedUser()
+          && incoming().parentUid == request.auth.uid
+          && incoming().registrationStatus == 'pending'
+          && incoming().isActive == false
+          && incoming().monthlyFee == 0
+          && (
+            exists(/databases/$(database)/documents/parents/$(request.auth.uid))
+            || existsAfter(/databases/$(database)/documents/parents/$(request.auth.uid))
+          )
+        )
+      );
+      allow update: if isValidId(studentId) && isValidStudent(incoming()) && (
+        isAdmin() || (
+          isVerifiedUser()
+          && existing().parentUid == request.auth.uid
+          && incoming().parentUid == existing().parentUid
+          && incoming().registrationStatus == existing().registrationStatus
+          && incoming().isActive == existing().isActive
+          && incoming().monthlyFee == existing().monthlyFee
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'fullName', 'photoUrl', 'photoConsent', 'birthDate', 'gender', 'address', 'notes', 'updatedAt'
+          ])
+        )
+      );
+      allow delete: if isAdmin() && isValidId(studentId);
+    }
+
+    match /registrations/{registrationId} {
+      allow get: if isValidId(registrationId) && (isAdmin() || (isSignedIn() && existing().parentUid == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.parentUid == request.auth.uid);
+      allow create: if isValidId(registrationId) && isValidRegistration(incoming()) && (
+        isAdmin() || (
+          isVerifiedUser()
+          && incoming().parentUid == request.auth.uid
+          && incoming().status == 'pending'
+          && (
+            exists(/databases/$(database)/documents/students/$(incoming().studentId))
+            || existsAfter(/databases/$(database)/documents/students/$(incoming().studentId))
+          )
+        )
+      );
+      allow update: if isAdmin() && isValidId(registrationId) && isValidRegistration(incoming());
+      allow delete: if isAdmin() && isValidId(registrationId);
+    }
+
+    match /invoices/{invoiceId} {
+      allow get: if isValidId(invoiceId) && (isAdmin() || (isSignedIn() && existing().parentUid == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.parentUid == request.auth.uid);
+      allow create, update: if isAdmin() && isValidId(invoiceId) && isValidInvoice(incoming());
+      allow delete: if isAdmin() && isValidId(invoiceId);
+    }
+
+    match /payments/{paymentId} {
+      allow get: if isValidId(paymentId) && (isAdmin() || (isSignedIn() && existing().parentUid == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.parentUid == request.auth.uid);
+      allow create, update: if isAdmin() && isValidId(paymentId) && isValidPayment(incoming());
+      allow delete: if isAdmin() && isValidId(paymentId);
+    }
+
+    match /contactMessages/{messageId} {
+      allow get, list: if isAdmin();
+      allow create: if isValidId(messageId) && isValidContactMessage(incoming()) && incoming().status == 'new';
+      allow update: if isAdmin() && isValidId(messageId) && isValidContactMessage(incoming());
+      allow delete: if isAdmin() && isValidId(messageId);
+    }
+  }
+}

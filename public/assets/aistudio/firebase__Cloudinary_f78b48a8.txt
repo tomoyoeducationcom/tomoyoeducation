@@ -1,0 +1,36 @@
+firebase : 
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAJtUEOs2hDOD-F7FOONGB_0ZCitbMff0s",
+  authDomain: "tomoyoeducation-com.firebaseapp.com",
+  projectId: "tomoyoeducation-com",
+  storageBucket: "tomoyoeducation-com.firebasestorage.app",
+  messagingSenderId: "352477532088",
+  appId: "1:352477532088:web:b46ce07720768c50d0c94d"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+login /admin 
+email : tomoyoeducation.com@gmail.com 
+ID : Ra5KzowVQWPGlX8BH2fiAIwASQn1
+
+
+Cloudinary : 
+
+cloud name : fgxdx2hq
+Upload preset : tomoyo
+overwrite:false
+use filename:false
+unique filename:false
+use filename as display name:true
+use asset folder as public id prefix:false
+type:upload
+asset folder:tomoyo/gambar
